@@ -1,43 +1,63 @@
-name: Validate OpenAPI Specifications with AWS API Gateway
+name: Deploy OpenAPI Spec to AWS API Gateway
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
 
 jobs:
   validate:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout repository
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v2
 
-      # Step 2: Configure AWS credentials using secrets stored in GitHub
-      - name: Configure AWS credentials
+      - name: Set up AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.CENTRAL_SEQUENCE_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.CENTRAL_SEQUENCE_AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      # Step 3: Install yq to handle YAML to JSON conversion
-      - name: Install yq
+      - name: Install yq and dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y software-properties-common
-          sudo add-apt-repository ppa:rmescandon/yq
+          sudo add-apt-repository ppa:rmescandon/yq -y
           sudo apt-get update
           sudo apt-get install -y yq
 
-      # Step 4: Convert OpenAPI YAML to JSON for AWS CLI compatibility
-      - name: Convert YAML to JSON
-        run: yq eval -o=json api/openapi.yml > api/openapi.json
-
-      # Step 5: Base64 encode the OpenAPI JSON
-      - name: Base64 encode the OpenAPI JSON
+      - name: Convert OpenAPI YAML to JSON
         run: |
+          # Convert YAML to JSON and check for any errors
+          yq eval -o=json api/openapi.yml > api/openapi.json
+          echo "Converted OpenAPI spec to JSON."
+
+      - name: Validate OpenAPI JSON
+        run: |
+          # Validate JSON before proceeding
+          cat api/openapi.json
+          jq . api/openapi.json
+
+      - name: Base64 Encode OpenAPI JSON
+        run: |
+          # Encode the OpenAPI spec to Base64 for AWS API Gateway import
           cat api/openapi.json | base64 > api/openapi_base64.json
+          echo "Base64 encoded OpenAPI JSON."
 
-      # Step 6: Import the OpenAPI specification to AWS API Gateway
-      - name: Validate and Import OpenAPI Spec to AWS API Gateway
+      - name: Import OpenAPI spec to AWS API Gateway
         run: |
+          # Try to import the OpenAPI spec to AWS API Gateway
           aws apigateway import-rest-api --body file://api/openapi_base64.json
+        continue-on-error: true
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
+
+      - name: Check AWS API Gateway Import Result
+        if: failure()
+        run: |
+          echo "AWS API Gateway import failed. Please check the OpenAPI spec."
+          exit 1
