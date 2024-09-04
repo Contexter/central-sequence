@@ -1,4 +1,4 @@
-name: Validate OpenAPI Specifications
+name: Validate OpenAPI Spec and Import to AWS API Gateway
 
 on:
   push:
@@ -30,20 +30,25 @@ jobs:
 
       - name: Convert OpenAPI YAML to JSON
         run: |
+          # Convert YAML to JSON and check for any errors
           yq eval -o=json api/openapi.yml > api/openapi.json
           echo "Converted OpenAPI spec to JSON."
 
       - name: Validate OpenAPI JSON
         run: |
+          # Validate JSON before proceeding
+          cat api/openapi.json
           jq . api/openapi.json
 
       - name: Base64 Encode OpenAPI JSON
         run: |
+          # Encode the OpenAPI spec to Base64 for AWS API Gateway import
           cat api/openapi.json | base64 > api/openapi_base64.json
           echo "Base64 encoded OpenAPI JSON."
 
       - name: Import OpenAPI spec to AWS API Gateway
         run: |
+          # Try to import the OpenAPI spec to AWS API Gateway
           aws apigateway import-rest-api --body file://api/openapi_base64.json
         continue-on-error: true
         env:
