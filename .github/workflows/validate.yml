@@ -17,5 +17,11 @@ jobs:
           aws-secret-access-key: ${{ secrets.CENTRAL_SEQUENCE_AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
+      - name: Install yq (YAML processor)
+        run: sudo apt-get install -y yq
+
+      - name: Convert OpenAPI YAML to JSON
+        run: yq eval -j api/openapi.yml > api/openapi.json
+
       - name: Validate OpenAPI spec with AWS API Gateway
-        run: aws apigateway get-rest-apis --cli-input-json file://api/openapi.yml
+        run: aws apigateway get-rest-apis --cli-input-json file://api/openapi.json
