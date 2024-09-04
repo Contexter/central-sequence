@@ -16,8 +16,8 @@ jobs:
       - name: Set up AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.CENTRAL_SEQUENCE_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.CENTRAL_SEQUENCE_AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
       - name: Install yq and dependencies
@@ -51,10 +51,6 @@ jobs:
           # Try to import the OpenAPI spec to AWS API Gateway
           aws apigateway import-rest-api --body file://api/openapi_base64.json
         continue-on-error: true
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1
 
       - name: Check AWS API Gateway Import Result
         if: failure()
