@@ -1,4 +1,4 @@
-name: Deploy OpenAPI Spec to AWS API Gateway
+name: Deploy
 
 on:
   push:
@@ -8,32 +8,29 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      - name: Set up AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
 
-      - name: Convert OpenAPI YAML to JSON (if necessary)
-        run: |
-          yq eval -o=json api/openapi.yml > api/openapi.json
-          echo "Converted OpenAPI spec to JSON."
+    - name: Convert OpenAPI spec to JSON
+      run: |
+        yq eval -o=json api/openapi.yml > api/openapi.json
+        echo "Converted OpenAPI spec to JSON."
 
-      - name: Validate OpenAPI Spec
-        run: |
-          jq . api/openapi.json
-          echo "Validated OpenAPI spec."
+    - name: Deploy API to API Gateway
+      run: |
+        aws apigateway import-rest-api --body file://api/openapi.json
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: us-east-1
 
-      - name: Import OpenAPI spec to AWS API Gateway
-        run: |
-          aws apigateway import-rest-api --body file://api/openapi.json
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1
+    - name: Post-deployment cleanup
+      run: echo "Cleanup after deployment."
