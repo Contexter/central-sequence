@@ -1,7 +1,10 @@
 name: Deploy OpenAPI Specifications to AWS API Gateway
 
 on:
-  push:
+  workflow_run:
+    workflows: ["Lint OpenAPI Specifications", "Validate OpenAPI Specifications"]
+    types:
+      - completed
     branches:
       - main
 
