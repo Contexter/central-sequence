@@ -1,0 +1,22 @@
+name: Lint OpenAPI Specifications
+
+on: [push, pull_request]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install Redocly OpenAPI CLI
+        run: npm install -g @redocly/openapi-cli
+
+      - name: Lint OpenAPI spec
+        run: openapi lint api/openapi.yml
