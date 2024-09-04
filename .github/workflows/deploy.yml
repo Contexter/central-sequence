@@ -20,9 +20,12 @@ jobs:
           aws-secret-access-key: ${{ secrets.CENTRAL_SEQUENCE_AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Base64 encode OpenAPI spec
+      # Optional: Convert YAML to JSON if needed
+      - name: Convert OpenAPI YAML to JSON (optional)
         run: |
-          base64 api/openapi.yml > api/openapi_base64.yml
+          yq eval -o=json api/openapi.yml > api/openapi.json
+          echo "Converted OpenAPI spec to JSON."
 
+      # Use the OpenAPI YAML or JSON file directly for deployment
       - name: Deploy OpenAPI spec to AWS API Gateway
-        run: aws apigateway import-rest-api --body file://api/openapi_base64.yml
+        run: aws apigateway import-rest-api --body file://api/openapi.yml
