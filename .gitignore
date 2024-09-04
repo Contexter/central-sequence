@@ -1,0 +1,13 @@
+# Ignore macOS system files
+.DS_Store
+
+# Ignore node_modules
+node_modules/
+
+# Ignore log files and environment files
+*.log
+.env
+
+# Ignore GitHub Actions workflow logs
+.github/workflows/*.log
+
