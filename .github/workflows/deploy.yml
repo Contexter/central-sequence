@@ -1,10 +1,7 @@
 name: Deploy OpenAPI Specifications to AWS API Gateway
 
 on:
-  workflow_run:
-    workflows: ["Lint OpenAPI Specifications", "Validate OpenAPI Specifications"]
-    types:
-      - completed
+  push:
     branches:
       - main
 
@@ -23,5 +20,9 @@ jobs:
           aws-secret-access-key: ${{ secrets.CENTRAL_SEQUENCE_AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
+      - name: Base64 encode OpenAPI spec
+        run: |
+          base64 api/openapi.yml > api/openapi_base64.yml
+
       - name: Deploy OpenAPI spec to AWS API Gateway
-        run: aws apigateway import-rest-api --body file://api/openapi.yml
+        run: aws apigateway import-rest-api --body file://api/openapi_base64.yml
