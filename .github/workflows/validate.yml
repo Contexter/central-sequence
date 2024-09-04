@@ -1,0 +1,21 @@
+name: Validate OpenAPI Specifications with AWS API Gateway
+
+on: [push, pull_request]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.CENTRAL_SEQUENCE_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.CENTRAL_SEQUENCE_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Validate OpenAPI spec with AWS API Gateway
+        run: aws apigateway get-rest-apis --cli-input-json file://api/openapi.yml
