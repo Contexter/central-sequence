@@ -7,9 +7,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      # Step 2: Configure AWS credentials using secrets stored in GitHub
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -17,7 +19,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.CENTRAL_SEQUENCE_AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      # Option 1: Fix the 'yq' installation issue
+      # Step 3: Install yq to handle YAML to JSON conversion
       - name: Install yq
         run: |
           sudo apt-get update
@@ -26,13 +28,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y yq
 
+      # Step 4: Convert OpenAPI YAML to JSON for AWS CLI compatibility
       - name: Convert YAML to JSON
         run: yq eval -o=json api/openapi.yml > api/openapi.json
 
-      # Option 2: Use Python for YAML to JSON conversion (alternative to 'yq')
-      - name: Convert YAML to JSON
-        run: |
-          python3 -c 'import yaml, json, sys; json.dump(yaml.safe_load(open("api/openapi.yml")), sys.stdout, indent=2)' > api/openapi.json
-
-      - name: Validate OpenAPI spec with AWS API Gateway
-        run: aws apigateway get-rest-apis --cli-input-json file://api/openapi.json
+      # Step 5: Import the OpenAPI specification to AWS API Gateway
+      - name: Validate and Import OpenAPI Spec to AWS API Gateway
+        run: aws apigateway import-rest-api --body file://api/openapi.json
