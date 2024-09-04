@@ -32,6 +32,12 @@ jobs:
       - name: Convert YAML to JSON
         run: yq eval -o=json api/openapi.yml > api/openapi.json
 
-      # Step 5: Import the OpenAPI specification to AWS API Gateway
+      # Step 5: Base64 encode the OpenAPI JSON
+      - name: Base64 encode the OpenAPI JSON
+        run: |
+          cat api/openapi.json | base64 > api/openapi_base64.json
+
+      # Step 6: Import the OpenAPI specification to AWS API Gateway
       - name: Validate and Import OpenAPI Spec to AWS API Gateway
-        run: aws apigateway import-rest-api --body file://api/openapi.json
+        run: |
+          aws apigateway import-rest-api --body file://api/openapi_base64.json
